@@ -75,15 +75,20 @@ double run_simulation(int N, int rank, int size) {
     double start = MPI_Wtime();
 
     MPI_Request reqs[4];
+    MPI_Status statuses[4];
 
     for (int iter = 0; iter < ITER; iter++) {
         exchange_halos_async(old, local_N, rank, size, reqs);
+
         if (local_N > 2)
             update_cells_internal(old, new, local_N);
-        MPI_Waitall(4, reqs, MPI_STATUSES_IGNORE);
+
+        MPI_Waitall(4, reqs, statuses);
+
         update_cells_boundary_fixed(old, new, local_N);
         copy_array(new, old, local_N);
     }
+
 
     MPI_Barrier(MPI_COMM_WORLD);
     double end = MPI_Wtime();
